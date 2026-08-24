@@ -139,11 +139,12 @@ product_2_f:
   push rbp
   mov rbp, rsp
   ;prologo
-  
-  cvtsi2ss xmm1, esi   ; Convierte el entero de 32 bits de ESI a float y lo guarda en XMM1
+  mov eax,esi
+
+  cvtsi2ss xmm1, rax   ; Convierte el entero de 32 bits de ESI a float y lo guarda en XMM1
   mulss xmm0,xmm1
   cvttss2si eax,xmm0
-  mov [rdi],rax  
+  mov [rdi],eax  
   ;epilogo
   pop rbp
 	ret
@@ -156,6 +157,26 @@ product_2_f:
 ;registros y pila: destination[rdi], x1[?], f1[?], x2[?], f2[?], x3[?], f3[?], x4[?], f4[?]
 ;	, x5[?], f5[?], x6[?], f6[?], x7[?], f7[?], x8[?], f8[?],
 ;	, x9[?], f9[?]
+;destination -->RDI
+;x1 -->ESI
+;x2 -->EDX
+;x3 -->ECX
+;x4 -->R8
+;x5 -->R9
+;x6 -->[RBP+16]
+;x7 -->[RBP+24]
+;x8 -->[RBP+32]
+;x9 -->[RBP+40]
+;f1 -->XMM0
+;f2 -->XMM1
+;f3 -->XMM2
+;f4 -->XMM3
+;f5 -->XMM4
+;f6 -->XMM5
+;f7 -->XMM6
+;f8 -->XMM7
+;f9 -->[RBP+48]
+
 product_9_f:
 	;prologo
 	push rbp
@@ -163,13 +184,51 @@ product_9_f:
 
 	;convertimos los flotantes de cada registro xmm en doubles
 	; COMPLETAR
-
+  CVTSS2SD xmm0,XMM0
+  CVTSS2SD xmm1,xmm1
+  CVTSS2SD xmm2,XMM2
+  CVTSS2SD xmm3,XMM3
+  CVTSS2SD XMM4,XMM4
+  CVTSS2SD XMM5,XMM5
+  CVTSS2SD XMM6,XMM6
+  CVTSS2SD XMM7,XMM7
+  movSS xmm8,[RBP+48]
+  CVTSS2SD XMM8,xmm8
+  
 	;multiplicamos los doubles en xmm0 <- xmm0 * xmm1, xmmo * xmm2 , ...
-	; COMPLETAR
+	MULSD XMM0,xmm1
+  MULSD xmm0,xmm2
+  MULSD XMM0,xmm3
+  MULSD XMM0,xmm4
+  MULSD XMM0,xmm5
+  MULSD XMM0,xmm6
+  MULSD XMM0,xmm7
+  MULSD XMM0,XMM8
+  
+  ; COMPLETAR
 
 	; convertimos los enteros en doubles y los multiplicamos por xmm0.
+  CVTSI2SD XMM2,ESI
+  MULSD xmm1,xmm2
+  CVTSI2SD XMM2,EDX
+  MULSD xmm1,xmm2
+  CVTSI2SD XMM2,ECX
+  MULSD xmm1,xmm2
+  CVTSI2SD XMM2,R8D
+  MULSD xmm1,xmm2
+  CVTSI2SD XMM2,R9D
+  MULSD xmm1,xmm2
+  CVTSI2SD XMM2,[RBP+16]
+  MULSD xmm1,xmm2
+  CVTSI2SD XMM2,[RBP+24]
+  MULSD xmm1,xmm2
+  CVTSI2SD XMM2,[RBP+32]
+  MULSD xmm1,xmm2
+  CVTSI2SD XMM2,[RBP+40]
+  MULSD xmm1,xmm2
 	; COMPLETAR
-
+  
+  movSD qword [rdi],xmm1
 	; epilogo
 	pop rbp
 	ret
