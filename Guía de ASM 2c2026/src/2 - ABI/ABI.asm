@@ -97,20 +97,55 @@ alternate_sum_4_using_c_alternative:
 
 
 ; uint32_t alternate_sum_8(uint32_t x1, uint32_t x2, uint32_t x3, uint32_t x4, uint32_t x5, uint32_t x6, uint32_t x7, uint32_t x8);
-; registros y pila: x1[?], x2[?], x3[?], x4[?], x5[?], x6[?], x7[?], x8[?]
+; registros y pila:
+; x1 --> EDI
+; x2 --> ESI
+; x3 --> EDX
+; x4 --> ECX
+; x5 --> E8
+; x6 --> E9
+; x7 --> [RBP+4]
+; x8 --> [RBP+8]
 alternate_sum_8:
-	;prologo
-
-	; COMPLETAR
+  
+  push rbp
+  mov rbp, rsp
+  ;prologo
+  sub EDI, ESI
+  add EDI,EDX
+  sub EDI, ECX
+  add EDI, r8d
+  sub EDI,r9d
+  add EDI,[RBP+16]
+  sub EDI,[RBP+24]
+  
+  mov EAX, EDI
 
 	;epilogo
-	ret
+  pop rbp
+  ret 
 
+
+;QUE APRENDI ACA: BAsicamente hay que acomodar la pila para poder hacer las cosas, despues el offset estaba mal calculado, pense que era +4 y +8 pero era mas.
+;Por que? Prque en si pinto esa
 
 ; SUGERENCIA: investigar uso de instrucciones para convertir enteros a floats y viceversa
 ;void product_2_f(uint32_t * destination, uint32_t x1, float f1);
 ;registros: destination[?], x1[?], f1[?]
+; destination --> RDI
+; x1 --> ESI
+; f1 --> XMM0
 product_2_f:
+  push rbp
+  mov rbp, rsp
+  ;prologo
+  
+  cvtsi2ss xmm1, esi   ; Convierte el entero de 32 bits de ESI a float y lo guarda en XMM1
+  mulss xmm0,xmm1
+  cvttss2si eax,xmm0
+  mov [rdi],rax  
+  ;epilogo
+  pop rbp
 	ret
 
 
