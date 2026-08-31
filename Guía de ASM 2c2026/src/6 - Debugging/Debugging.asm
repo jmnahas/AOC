@@ -21,10 +21,10 @@ UINT32_SIZE EQU 8
 ; Marcar el ejercicio como hecho (`true`) o pendiente (`false`).
 
 global EJERCICIO_1_HECHO
-EJERCICIO_1_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 global EJERCICIO_2_HECHO
-EJERCICIO_2_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_2_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 global EJERCICIO_3_HECHO
 EJERCICIO_3_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
@@ -32,20 +32,30 @@ EJERCICIO_3_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
 global EJERCICIO_4_HECHO
 EJERCICIO_4_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
 
+;SUM1 -> Rdi
+;SUM2 -> RSI
+;SUM3 -> RDX
+;SUM4 -> RCX
+;SUM5 -> R8
 global ejercicio1
 ejercicio1:
-	add edi, ecx
-	add edi, edx
-    add edi, ebx
-    add edi, r9d
-	mov eax, edi
+	push RBP ;pila alineada
+    mov RBP, RSP ;strack frame armado
+	
+	add Rdi, RSI
+	add Rdi, Rdx
+    add Rdi, RCX
+    add Rdi, r8
+	mov Rax, Rdi
+	
+	POP RBP
 	ret
 
 global ejercicio2
 ejercicio2:
 	mov [rdi+ITEM_OFFSET_ID], rsi
 	mov [rdi+ITEM_OFFSET_CANTIDAD], rdx
-	call strcpy 
+	
 	ret
 
 
