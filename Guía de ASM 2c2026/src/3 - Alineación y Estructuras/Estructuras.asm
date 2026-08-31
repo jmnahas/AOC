@@ -30,7 +30,15 @@ global cantidad_total_de_elementos_packed
 ;########### DEFINICION DE FUNCIONES
 ;extern uint32_t cantidad_total_de_elementos(lista_t* lista);
 ;registros: lista[?]
+
+;Para la lista voy a tener 4 elementos
+;puntero a struct que ocupa 8
+;	 struct nodo_s* next;   //8 bytes
+;    uint8_t categoria;     //1 byte
+;    uint32_t* arreglo;     //8 bytes
+;    uint32_t longitud;		//4 bytes
 cantidad_total_de_elementos:
+
 	ret
 
 ;extern uint32_t cantidad_total_de_elementos_packed(packed_lista_t* lista);

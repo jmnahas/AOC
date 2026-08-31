@@ -208,28 +208,35 @@ product_9_f:
   ; COMPLETAR
 
 	; convertimos los enteros en doubles y los multiplicamos por xmm0.
-  CVTSI2SD XMM2,ESI
-  MULSD xmm1,xmm2
-  CVTSI2SD XMM2,EDX
-  MULSD xmm1,xmm2
-  CVTSI2SD XMM2,ECX
-  MULSD xmm1,xmm2
-  CVTSI2SD XMM2,R8D
-  MULSD xmm1,xmm2
-  CVTSI2SD XMM2,R9D
-  MULSD xmm1,xmm2
+  CVTSI2SD XMM2,RSI
+  MULSD xmm0,xmm2
+  CVTSI2SD XMM2,RDX
+  MULSD xmm0,xmm2
+  CVTSI2SD XMM2,RCX
+  MULSD xmm0,xmm2
+  CVTSI2SD XMM2,R8
+  MULSD xmm0,xmm2
+  CVTSI2SD XMM2,R9
+  MULSD xmm0,xmm2
   CVTSI2SD XMM2,[RBP+16]
-  MULSD xmm1,xmm2
+  MULSD xmm0,xmm2
   CVTSI2SD XMM2,[RBP+24]
-  MULSD xmm1,xmm2
+  MULSD xmm0,xmm2
   CVTSI2SD XMM2,[RBP+32]
-  MULSD xmm1,xmm2
+  MULSD xmm0,xmm2
   CVTSI2SD XMM2,[RBP+40]
-  MULSD xmm1,xmm2
+  MULSD xmm0,xmm2
 	; COMPLETAR
   
-  movSD qword [rdi],xmm1
+  movSD [rdi],xmm0
 	; epilogo
 	pop rbp
 	ret
 
+;Que aprendi aca?
+;Bueno bastantes cosas, para empezar el tema de la pila pero ahora con registror xmm, tengo hasta 8 registros, 8!!!!! el noveno se pasa por pila
+;importante tambien saber el orden porque si el f9 me lo pasaban antes quizas no era mas [rbp+40] sino que era rbp+8 o otras cosas asi.
+;Otra cosa es el tema del SD,SS,SI etc. Hay algunos que son para simd, que son los PACKED, esas instrucciones las tengo que evitar.
+;Despues estan las que son de scalar algo, scalar float y cosas asi
+
+;Tambien esta bueno saber que tengo que usar registros que arrancan con R para los de 64 y con E para los de 32, en el caso de los de 32 si uso los r8 y r9 usar el d al final para usar la parte baja.
