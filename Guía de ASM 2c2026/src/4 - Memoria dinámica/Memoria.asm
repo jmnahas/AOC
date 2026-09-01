@@ -28,18 +28,44 @@ strCmp:
 	push rsi
 	call strLen
 	;rax tiene el strlen de a
-	mov 
+	mov r12,rax
 	pop rsi
 	pop rdi
-	; aca cmabio los paramteros
-	.ciclo:
-		
 	; tengo a y b
-	; max(a,b)
-	; while a[i] != 0 :
-	; if a[i]!=b[i]
-	;	return -1
-	; 
+	; si hay uno que tenga longitud mas grande quiere decir que no son iguales las cadenas
+	mov rax,rsi
+	mov rdi,rsi
+	mov rsi,rax
+
+	push rdi
+	push rsi
+	call strLen
+	;rax tiene strlen de b
+	pop rsi
+	pop rdi
+	;En RAX tengo strlen de b y en r12 tengo el strlen de a
+	;si no son iguales ya se que se devuelve 0
+	cmp r12,rax
+	jne .fin
+	;si llego hasta aca es porque tienen misma longitud
+	.ciclo:
+		; while a[i] != 0 :
+		cmp byte [rdi],0
+		je .finbueno
+		; 	if a[i]!=b[i]
+		cmp byte [rdi],byte [rsi]
+		;	return -1
+		jne .fin
+		; si llega afuera del while devuelvo 1
+		mov rax,1
+
+		inc rdi
+		inc rsi
+		jmp .ciclo
+	.fin:
+		mov rax,0 
+	.finbueno:
+	
 	add rsp,8
 	pop r12
 	pop rbp
@@ -47,6 +73,10 @@ strCmp:
 
 ; char* strClone(char* a)
 strClone:
+	push rbp
+	mov rbp,rsp
+	mov rax,rdi
+	pop rbp
 	ret
 
 ; void strDelete(char* a)
