@@ -18,64 +18,76 @@ global strLen
 ; a -> [RDI]
 ; b -> [RSI]
 strCmp:
-	push rbp
-	mov rbp,rsp
-	push R12
-	sub rsp,8
+    push rbp
+    mov rbp, rsp
 
-	mov rax,0
-	push rdi
-	push rsi
-	call strLen
-	;rax tiene el strlen de a
-	mov r12,rax
-	pop rsi
-	pop rdi
-	; tengo a y b
-	; si hay uno que tenga longitud mas grande quiere decir que no son iguales las cadenas
-	mov rax,rsi
-	mov rdi,rsi
-	mov rsi,rax
-
-	push rdi
-	push rsi
-	call strLen
-	;rax tiene strlen de b
-	pop rsi
-	pop rdi
-	;En RAX tengo strlen de b y en r12 tengo el strlen de a
-	;si no son iguales ya se que se devuelve 0
-	cmp r12,rax
-	jne .fin
-	;si llego hasta aca es porque tienen misma longitud
-	.ciclo:
-		; while a[i] != 0 :
-		cmp byte [rdi],0
-		je .finbueno
-		; 	if a[i]!=b[i]
-		cmp byte [rdi],byte [rsi]
-		;	return -1
-		jne .fin
-		; si llega afuera del while devuelvo 1
-		mov rax,1
-
-		inc rdi
-		inc rsi
-		jmp .ciclo
-	.fin:
-		mov rax,0 
-	.finbueno:
+	.loop:
+	    mov al, byte [rdi]        ; AL = a[i]
+	    mov dl, byte [rsi]        ; DL = b[i]
 	
-	add rsp,8
-	pop r12
-	pop rbp
-	ret
+	    cmp al, dl
+	    jne .diferentes           ; Si no son iguales, determinamos quién es mayor
+	
+	    ; Si son iguales, chequeamos si llegamos al final ('\0')
+	    cmp al, 0
+	    je .son_iguales
+	
+	    ; Avanzamos al siguiente byte
+	    inc rdi
+	    inc rsi
+	    jmp .loop
+	
+	.diferentes:
+	    ; Usamos jl / jg sin signo (ja / jb) porque los chars en strcmp son unsigned
+	    ja .a_es_mayor            ; Si a[i] > b[i]
+	    mov rax, 1               ; Si a[i] < b[i] -> devuelve -1
+	    jmp .fin
+	
+	.a_es_mayor:
+	    mov rax, -1                ; Devuelve 1
+	    jmp .fin
+	
+	.son_iguales:
+	    mov rax, 0                ; Devuelve 0
+	
+	.fin:
+    	pop rbp
+    	ret
 
 ; char* strClone(char* a)
 strClone:
 	push rbp
 	mov rbp,rsp
-	mov rax,rdi
+	push r12
+	push r13
+	
+	mov r12,rdi
+
+	push rdi
+	call strLen;en rax tengo la longitud de rdi
+	pop rdi
+
+	push rdi
+	lea rdi, [rax + 1]
+	call malloc ; aca tengo el puntero a donde tengo guardado la direcciond ememoria al lugar nuevo
+	pop rdi
+
+	mov r13,rax
+
+	.ciclo:
+		mov dl, byte [r12]    ; Usamos DL (no AL) para no tocar RAX
+    	mov byte [r13], dl    ; Escribimos en el clon
+    	cmp dl, 0                   ; ¿Copiamos el '\0'?
+    	je .salgo
+
+		inc r12
+		inc r13
+		jmp .ciclo
+	.salgo:
+
+
+	pop r13 
+	pop r12
 	pop rbp
 	ret
 
@@ -110,3 +122,9 @@ strLen:
 	ret
 
 
+;Que aprendi aca?
+;MUCHAS cosas, la primera no complicarme de mas en algunas cosas como por ejemplo apra hacer el strcmp que pense en hacer 2 ciclos o cosas asi, 
+;averiguar mas sobre la funcion que tengo que hacer
+;depsues no puedo hacer un [] a [] y cuando uso un [] tengo que poner la cantidad de memoria que voy a usar(casi siempre)
+;si lo uso tipo [rax] esto es completo completo
+;En el clone por ejemplo esta bueno eso qeu hago de tener la direccion de memoria y esas cosas fidjarme donde la guardo, fijarme donde comparo tal cosa con tal otra y asi

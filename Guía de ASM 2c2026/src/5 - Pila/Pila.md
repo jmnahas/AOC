@@ -24,3 +24,9 @@ Por ejemplo: `p {char*} 0x12345678` es equivalente a `p *(char**) 0x12345678`.
   - En el ejemplo mostrado, sabemos que en la dirección `0x12345678` hay un puntero a `char`, por lo que le decimos a `gdb` que interprete el contenido de esa dirección como un puntero a `char`.
 - El comando `p ({tipo} dirección)@cantidad` permite imprimir una cantidad de elementos de un tipo determinado a partir de una dirección.
 Esto es sumamente práctico cuando conocemos la dirección y el tipo de una variable y queremos ver su contenido.
+
+
+
+### APUNTE DE JUAN:
+- Que aprendi aca?
+- Hacer distintas cosas, ejemplo ver los frames o direccion de memoria de la pila haciendo x/16gx rsp en la funcion correspondiente
