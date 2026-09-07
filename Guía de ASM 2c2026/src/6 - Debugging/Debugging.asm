@@ -36,7 +36,7 @@ EJERCICIO_4_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 ;SUM2 -> RSI
 ;SUM3 -> RDX
 ;SUM4 -> RCX
-;SUM5 -> R8
+;SUM5 -> R8	
 global ejercicio1
 ejercicio1:
 	push RBP ;pila alineada
@@ -125,15 +125,17 @@ global ejercicio4
 ; Tengo qeu devolver en rax un puntero a un array que sea el primer array multiplicado por la cosntante
 ; uint32_t** array -> rdi
 ; uint32_t size -> rsi
-; uint32_t constante ->rcx
+; uint32_t constante ->rdx
 ejercicio4:
 	push rbp
 	mov rbp,rsp
+	push rbx
 	push r12
 	push r13
 	push r14
 	push r15
-
+	sub rsp,8
+	
 
 	mov r12, rdi ; guardo las cosas por las dudas
 	mov r13, rsi
@@ -147,30 +149,42 @@ ejercicio4:
 	call malloc ;llamo malloc porlas
 	mov r15, rax ; guardo la direccion de memoria en la que tengo mi nuevo array
 	
-	xor rbx, rbx
+	xor rcx, rcx
 	.loop:
 	
-	cmp rbx, r13
+	cmp rcx, r13
 	je .end
 
-	mov r8, [r12+rbx*POINTER_SIZE]
+	mov rbx, POINTER_SIZE
+	imul rbx,rcx
+	mov r8, [r12+rbx]
+	mov qword [r12+rbx],0 
 	mov r9d, [r8]
 	mov rax, r14
-	mul r9d
-	mov [r15+rbx*UINT32_SIZE], eax
-	
-	
+	imul eax,r9d
+	mov rbx, UINT32_SIZE
+	imul rbx,rcx
+	mov [r15+rbx], eax
+	mov rdi, r8 
 
-	inc rbx
+	sub rsp,8
+	push rcx
+	call free
+	pop rcx
+	add rsp,8
+
+	inc rcx
 	jmp .loop
 
 	.end:
+
 	mov rax, r15
-	mov rsi, r8 
-	call free
+	
+	add rsp,8
 	pop r15
 	pop r14
 	pop r13
 	pop r12
+	pop rbx
 	pop rbp
 	ret
