@@ -21,7 +21,7 @@ EJERCICIO_1A_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 ; Funciones a implementar:
 ;   - indice_a_inventario
 global EJERCICIO_1B_HECHO
-EJERCICIO_1B_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1B_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
 
 ;########### ESTOS SON LOS OFFSETS Y TAMAÑO DE LOS STRUCTS
 ; Completar las definiciones (serán revisadas por ABI enforcer):
@@ -65,22 +65,54 @@ es_indice_ordenado:
 	; r/m64 = comparador_t comparador ->rcx
 	;
 	push rbp
-    mov rbp, rsp
+	mov rbp, rsp
 	push rbx
 	push r12
 	push r13
 	push r14
+	push r15
+	sub rsp,8
 
 	xor rbx,rbx
-	
+	mov r14,rbx
 	.ciclo:
-		cmp rdx,rbx
+		add r14,1
+		cmp r14d,edx
+		je .fin
+		
+		movzx r15, word[rsi + rbx *2]
+
+		mov r12, [rdi+ r15 * 8]
+		
+		movzx r15, word[rsi + r14 *2]
+
+		mov r13, [rdi+ r15 * 8]
+		
+
+		push rdi
+		push rsi
+		push rcx
+		push rdx
+		mov rdi,r12
+		mov rsi,r13
+		call rcx
+		pop rdx
+		pop rcx
+		pop rsi
+		pop rdi
+
+
+		cmp rax,0
 		je .fin
 
-		
+
+
+		inc rbx
 
 	.fin:
 
+	add rsp,8
+	pop r15
 	pop r14
 	pop r13
 	pop r12
