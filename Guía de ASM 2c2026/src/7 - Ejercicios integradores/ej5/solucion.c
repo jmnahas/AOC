@@ -17,7 +17,7 @@ bool EJERCICIO_1_HECHO = true;
  * Funciones a implementar:
  *   - invocar_acciones
  */
-bool EJERCICIO_2_HECHO = true;
+bool EJERCICIO_2_HECHO = false;
 
 /**
  * Marca el ejercicio 3 como hecho (`true`) o pendiente (`false`).
@@ -38,6 +38,18 @@ bool EJERCICIO_3_HECHO = true;
  *   - Cualquier otro valor es `true`
  */
 bool hay_accion_que_toque(accion_t* accion, char* nombre) {
+	while (accion != 0)
+	{
+		carta_t* car=accion->destino;
+		if (strcmp((car->nombre),nombre)== 0)
+		{
+			return true;
+		} else{
+			accion = accion->siguiente;
+		}
+		
+	}
+	
 	return false;
 }
 
@@ -63,6 +75,7 @@ bool hay_accion_que_toque(accion_t* accion, char* nombre) {
  * orden de ejecución.
  */
 void invocar_acciones(accion_t* accion, tablero_t* tablero) {
+
 }
 
 /**
@@ -84,4 +97,21 @@ void invocar_acciones(accion_t* accion, tablero_t* tablero) {
  */
 void contar_cartas(tablero_t* tablero, uint32_t* cant_rojas, uint32_t* cant_azules) {
 	*cant_rojas = *cant_azules = 0;
+	for (size_t i = 0; i < 10; i++)
+	{
+		for (size_t j = 0; j < 5; j++)
+		{
+			carta_t* carta = tablero->campo[j][i];
+			if (carta != NULL) {
+    			if (carta->jugador == 1) {
+        			(*cant_rojas)++;
+    			} else if (carta->jugador == 2) {
+        			(*cant_azules)++;
+   			 	}
+			}
+			
+		}
+		
+	}
+	
 }

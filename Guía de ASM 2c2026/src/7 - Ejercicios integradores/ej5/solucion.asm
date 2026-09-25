@@ -20,21 +20,29 @@ extern strcmp
 
 ;########### ESTOS SON LOS OFFSETS Y TAMAÑO DE LOS STRUCTS
 ; Completar las definiciones (serán revisadas por ABI enforcer):
-carta.en_juego EQU NO_COMPLETADO
-carta.nombre   EQU NO_COMPLETADO
-carta.vida     EQU NO_COMPLETADO
-carta.jugador  EQU NO_COMPLETADO
-carta.SIZE     EQU NO_COMPLETADO
+carta.en_juego EQU 0
+carta.nombre   EQU 1
+carta.vida     EQU 14
+carta.jugador  EQU 16
+carta.SIZE     EQU 18
 
-tablero.mano_jugador_rojo EQU NO_COMPLETADO
-tablero.mano_jugador_azul EQU NO_COMPLETADO
-tablero.campo             EQU NO_COMPLETADO
-tablero.SIZE              EQU NO_COMPLETADO
+;typedef struct carta {
+;	bool en_juego; 1 byte
+;	char nombre[12]; 12 byte
+;	uint16_t vida; 2 byte
+;	uint8_t jugador; 1 byte
+;} carta_t;
 
-accion.invocar   EQU NO_COMPLETADO
-accion.destino   EQU NO_COMPLETADO
-accion.siguiente EQU NO_COMPLETADO
-accion.SIZE      EQU NO_COMPLETADO
+
+tablero.mano_jugador_rojo EQU 0
+tablero.mano_jugador_azul EQU 8
+tablero.campo             EQU 16
+tablero.SIZE              EQU 24
+
+accion.invocar   EQU 0
+accion.destino   EQU 8
+accion.siguiente EQU 16
+accion.SIZE      EQU 24
 
 ; Variables globales de sólo lectura
 section .rodata
@@ -44,7 +52,7 @@ section .rodata
 ; Funciones a implementar:
 ;   - hay_accion_que_toque
 global EJERCICIO_1_HECHO
-EJERCICIO_1_HECHO: db FALSE
+EJERCICIO_1_HECHO: db TRUE
 
 ; Marca el ejercicio 2 como hecho (`true`) o pendiente (`false`).
 ;
@@ -58,7 +66,7 @@ EJERCICIO_2_HECHO: db FALSE
 ; Funciones a implementar:
 ;   - contar_cartas
 global EJERCICIO_3_HECHO
-EJERCICIO_3_HECHO: db FALSE
+EJERCICIO_3_HECHO: db TRUE
 
 section .text
 
@@ -80,9 +88,43 @@ hay_accion_que_toque:
 	; ubicación según la convención de llamada. Prestá atención a qué
 	; valores son de 64 bits y qué valores son de 32 bits o 8 bits.
 	;
-	; r/m64 = accion_t*  accion
-	; r/m64 = char*      nombre
-	xor rax, rax
+	; r/m64 = accion_t*  accion ->RDI
+	; r/m64 = char*      nombre -> RSI
+	push rbp
+	mov rbp,rsp
+	push r12 ; iterador
+	push r13 ; carta
+
+	mov r12,rdi
+	.ciclo:
+		cmp r12,0
+		je .finmalo
+
+		mov r13,  [r12+accion.destino] ; en r13 tengo la carta destino
+		
+		push rdi
+		push rsi
+
+		lea rdi, [r13+carta.nombre]
+		call strcmp
+		pop rsi
+		pop rdi
+		cmp rax,0
+		je .finbueno
+
+		mov r12,[r12+accion.siguiente ]
+		jmp .ciclo
+
+		.finbueno:
+			mov rax,1
+			jmp .fin
+	.finmalo:
+	xor eax,eax
+	.fin:
+
+	pop r13
+	pop r12
+	pop rbp
 	ret
 
 ; Invoca las acciones que fueron encoladas en la secuencia proporcionada en el
@@ -143,7 +185,70 @@ contar_cartas:
 	; ubicación según la convención de llamada. Prestá atención a qué
 	; valores son de 64 bits y qué valores son de 32 bits o 8 bits.
 	;
-	; r/m64 = tablero_t* tablero
-	; r/m64 = uint32_t*  cant_rojas
-	; r/m64 = uint32_t*  cant_azules
+	; r/m64 = tablero_t* tablero - > RDI
+	; r/m64 = uint32_t*  cant_rojas -> RSI
+	; r/m64 = uint32_t*  cant_azules -RDX
+	push rbp
+	mov rbp,rsp
+	push r12 ; i
+	push r13 ; j
+	push r14 ; carta
+	push r15 ;
+	push rbx
+	mov dword [rsi], 0
+	mov dword [rdx], 0
+	xor r12,r12
+
+	.cicloi:
+		;for (size_t i = 0; i < 10; i++)
+		cmp r12,tablero.ANCHO
+		je .fin
+		xor r13,r13
+		.cicloj:
+			;for (size_t j = 0; j < 5; j++)
+			cmp r13,tablero.ALTO
+			je .fin2
+			mov r15,r12
+			imul rbx,r13,tablero.ANCHO
+			add r15,rbx
+
+			mov r14,[RDI+ tablero.campo +r15*8]
+			cmp r14,0
+			;carta_t* carta = tablero->campo[j][i];
+			je .siguiente
+			;if (carta != NULL) {
+			
+	
+			;Caso cuando es jugador 1
+			cmp byte [r14+carta.jugador],1
+			je .rojas
+			
+
+			;Caso cuando es jugador 2
+			cmp byte [r14+carta.jugador],2
+			je .azul
+
+			jmp .siguiente
+
+				.rojas:
+					inc dword [rsi]
+					jmp .siguiente
+				.azul:
+					inc dword [rdx]
+					jmp .siguiente
+
+			.siguiente:
+				inc r13
+				jmp .cicloj
+		.fin2:
+		inc r12
+		jmp .cicloi
+	.fin:
+
+	pop rbx
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop rbp
 	ret
