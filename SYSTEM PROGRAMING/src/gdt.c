@@ -97,13 +97,22 @@ gdt_entry_t gdt[GDT_COUNT] = {
             .g           = 0b1,                //  1 bit : Granularidad de 4 KiB
             .base_31_24  = 0b00000000,
         },
-
-    /* Completar la GDT: 
-      Es conveniente completar antes las constantes definidas en defines.h y valerse
-      de las mismas para definir los descriptores acá. Traten en lo posible de usar las 
-      macros allí definidas.
-      Tomen el descriptor nulo como ejemplo y definan el resto.
-     */
+    [GDT_IDX_VIDEO] =
+    {
+        .limit_15_0  = 0b0001111101000000, // 16 bits: 0x30FF
+        .base_15_0   = 0b1000000000000000, // 16 bits: 0x0000
+        .base_23_16  = 0b00001011,         //  8 bits: 0x00
+        .type        = 0b0010,             //  4 bits: CCódigo read/write
+        .s           = 0b1,                //  1 bit : Descriptor de código/datos
+        .dpl         = 0b00,               //  2 bits: Nivel de privilegio 3
+        .p           = 0b1,                //  1 bit : Presente en RAM
+        .limit_19_16 = 0b0000,             //  4 bits: 0x3
+        .avl         = 0b0,                //  1 bit : Disponible (no usado)
+        .l           = 0b0,                //  1 bit : Modo 32 bits (no 64)
+        .db          = 0b1,                //  1 bit : Tamaño por defecto de 32 bits
+        .g           = 0b0,                //  1 bit : Granularidad de 4 KiB
+        .base_31_24  = 0b00000000,
+    }
     
 };
 

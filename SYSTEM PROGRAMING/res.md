@@ -21,7 +21,7 @@ Anteriormente, detallamos que la memoria es un arreglo continuo de bytes y que p
 3. Busquen el manual *volumen 3 de Intel en la sección 3.4.5 Segment Descriptors*. ¿Qué es la GDT? ¿Cómo es el formato de un descriptor de segmento, bit a bit? Expliquen brevemente para qué sirven los campos *Limit*, *Base*, *G*, *P*, *DPL*, *S*. También pueden referirse a los slides de la clase teórica, aunque recomendamos que se acostumbren a consultar el manual.
 La GDT es la G
 The global descriptor table o GDT, es un lugar de donde se selecciona la memoria, principalmente un selector de segmento que nos dice ciertas caracteristicas del cacho de memoria que estoy yendo a buscar,El mismo tiene un apartado de base,otro de segmento y luego distintos flags que nos dicen a que estoy apuntando.
-Limit:Especifica el tamaño del segmento, si la granularidad es 0 el segmento puede ir de 1 byte a 1 MByte si granularidad es 0 el tamaño puede ir de 4KB a 4GB.
+Limit:Especifica el tamaño del segmento, si la granularidad es 0 el segmento puede ir de 1 byte a 1 MByte si granularidad es 1 el tamaño puede ir de 4KB a 4GB.
 Base:Esto nos da la direccion lineal del segmento, nos dice donde esta ubicado, esta dividido en 3 partes distintas.
 G:Esto es la granularidad, nos dice como esta segmentado el segmento valga la redundancia, si de a 1 byte o de a 4KB
 P:Esto quiere decir si el segmento esta en memoria o no
@@ -156,8 +156,120 @@ En el mismo archivo lo dice son Declaracion variables de la Tabla GDT, en el cas
 
     *Hint*: investiguen para qué puede servir la instrucción **cli** en el manual 2.
 
+```
+print_text_rm  start_rm_msg,start_rm_len,0x0A,0,0
+```
+
+
 10. Busquen qué hace la instrucción LGDT en el Volumen 2 del manual de Intel. Expliquen con sus palabras para qué sirve esta instrucción. En el código, ¿qué estructura indica donde está almacenada la dirección desde la cual se carga la GDT y su tamaño? ¿dónde se inicializa en el código?
+La estructura es la que hicimos en gdt.c si no tengo mal entendido, en la misma voy a tener los 4 descriptores de segmento, se iniciliza en GDT.C y lo traigo a kernel.asm
+
 
 11. Completen el archivo `kernel.asm` en la sección de cargar la GDT usando lo averiguado en el punto 8 para cargar la GDT.
 
+
 12. Lean la guía de Qemu+gdb. Inserten un breakpoint luego de cargar la GDT. Podemos ahora comprobar el arranque de la máquina hasta ese punto. Para compilar y correr el kernel, pueden usar el target de make `qemu`. Para debuguear con GDB, pueden usar el target `gdb`.
+
+### Segunda parte: Pasaje a modo protegido
+
+Para pasar a modo protegido tenemos que completar los siguientes pasos:
+
+- Deshabilitar interrupciones || HECHO
+
+- Completar la GDT en memoria || HECHO
+
+- Cargar la dirección de la GDT en el registro del procesador GDTR || HECHO
+
+- Habilitar el modo protegido en el procesador
+
+- Hacer un jmp far al segmento de código de nivel 0
+
+- Cargar los selectores de segmento restantes
+
+Recomendamos que también miren como referencia, el manual *volumen 3, sección 9.9.1 "Switching to Protected Mode"*. Tengan en cuenta, que algunos de los pasos que están ahí descritos, corresponden a paginación, que no estaremos activando aún. Los pasos que nos interesan ahora son: 1,2,3,4,5 y 9
+
+Ya hemos hecho los primeros, deshabilitar interrupciones y completar la GDT. También ya cargamos el registro GDTR correctamente. Ahora deberíamos, habilitar el modo protegido, hacer el *jmp far* y cargar los registros selectores de segmento.
+
+13. Investiguen en el manual de Intel *sección 2.5 Control Registers*, el registro CR0. ¿Deberíamos modificarlo para pasar a modo protegido? Si queremos modificar CR0, no podemos hacerlo directamente. Sólo mediante un MOV desde/hacia los registros de control (pueden leerlo en el manual en la sección citada).
+Si tenemos que modificarlo pero no se puede directamente, usamos un registro y le ponemos un or 1 y recien ahi clavamos el 1 en el cr0
+
+
+14. A continuación, completen la sección del `kernel.asm` escribiendo un código que modifique CR0 para pasar a modo protegido. Tengan en cuenta las averiguaciones y comentarios del punto 13.
+```
+mov eax, cr0
+or eax, 1        ; Activa el bit PE
+mov cr0, eax
+```
+
+15. Notemos que a continuación debe hacerse un jump far para posicionarse en el código de modo protegido. Miren el volumen 2 de Intel para ver los distintos tipos de JMPs disponibles y piensen cuál sería el formato adecuado. ¿Qué usarían como selector de segmento?
+```
+jmp CS_RING_0_SEL:modo_protegido
+```
+
+16. Dentro del modo protegido, vamos a cargar los registros selectores de segmento (`DS`, `ES`, `GS`, `FS` y `SS`). Todos se van a iniciar en el segmento de datos de nivel 0. Para esto, completar el archivo `kernel.asm` dentro del código que se ejecuta ya en modo protegido (etiqueta `modo_protegido`)
+
+```
+mov ax, DS_RING_0_SEL
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+```
+
+
+17. Setear la pila del kernel en la dirección `0x25000`. Configuren los registros que indican dónde está la base y el tope de la pila.
+
+18. Impriman el mensaje de bienvenida a modo protegido e inserten breakpoint en la instrucción siguiente
+
+## VAMOS A INICIAR EL KERNEL
+
+Ya estamos listos para probar el arranque de la máquina. Para eso hay que compilar con `make` e iniciar `qemu`. Pueden hacer:
+
+```
+make gdb
+```
+
+para iniciar la sesión de qemu con el kernel y con gdb ya *attacheado.*
+
+Otros targets del Makefile:
+
+ - `make qemu`: se genera la imagen del kernel y se ejecuta qemu.
+
+ - `make attach`: attachea gdb a una sesión de qemu existente.
+
+ - `make gdb` hace estos dos últimos targets en secuencia
+
+Ya dentro de gdb, no es necesario salir y volver a entrar, sino que podemos hacer (dentro de la terminal de gdb):
+
+`kernel reload` 
+
+Esto hará un rebuild del kernel y reiniciará la sesión de gdb (pero quedarán seteados todos los breakpoints que hayamos puesto en esta sesión).
+
+19. Verifiquemos que la configuración haya quedado como esperamos:
+
+- Con el comando `info registers` en `qemu` pueden:
+
+- Ver `GDT= <BASE> <LIMITE>`. Verifiquen con `gdb` los valores de las entradas que cargaron.
+
+- Ver los registros de control como el `CR0`
+
+- Ver los registros de propósito general, `EFLAGS`, `EBP`, `ESP`, `RIP`, que también pueden ver con `gdb`.
+
+- Ver los registros selectores de segmento.
+
+20. Pueden ejecutar además `info gdt` dentro de gdb para verificar que la gdt se encuentra bien cargada.
+
+## Tercera parte: Configurando la pantalla
+
+Se va a acceder a la pantalla por un mapeo a memoria. La dirección física donde va a comenzar el buffer de la pantalla es `0x000B8000.`
+
+La pantalla va a ser un arreglo de 50 filas x 80 columnas. En cada posición del arreglo va a haber 2 bytes que representan a una celda de la pantalla. Los colores y atributos se configuran acorde a una convención: [http://wiki.osdev.org/Text_UI](http://wiki.osdev.org/Text_UI)
+
+21. Declaren un segmento adicional que describa el área de la pantalla en memoria que pueda ser utilizado sólo por el kernel. ¿Qué tamaño deberá tener considerando lo descrito en el párrafo anterior? Si el buffer de la pantalla comienza en `0x000B8000`[^3], piensen cuál debería ser la base y el límite. El tipo de este segmento debe ser de datos de lectura/escritura. Finalmente, definan el segmento en el archivo `gdt.c`.
+
+22. Observen el método `screen_draw_box` en `screen.c` y la estructura `ca` en `screen.h` . ¿Qué creen que hace el método **screen_draw_box**? ¿Cómo hace para acceder a la pantalla? ¿Qué estructura usa para representar cada carácter de la pantalla y cuanto ocupa en memoria?
+
+23. Escriban una rutina `screen_draw_layout` que se encargue de limpiar la pantalla y escribir el nombre de los integrantes del grupo (o lo que deseen) en la misma en el archivo `screen.c` y llamen a dicho método desde `kernel.asm`. Pueden usar diferentes fondos, colores e incorporar dibujos si así lo quisieran.
+
+24. Resumen final, discutan con compañeros qué pasos tuvieron que hacer para activar el procesador en modo protegido. Repasen todo el código que estuvieron completando y traten de comprenderlo en detalle ¿Qué cosas les parecieron más interesantes? Seguro encontrarán partes que no comprenden del todo, no duden en consultar a los docentes.

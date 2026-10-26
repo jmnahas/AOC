@@ -92,7 +92,7 @@ void idt_init() {
   IDT_ENTRY0(20);
 
   // COMPLETAR: Interrupciones de reloj y teclado
-
+  IDT_ENTRY0(20);
   // COMPLETAR: Syscalls
 }
 */
