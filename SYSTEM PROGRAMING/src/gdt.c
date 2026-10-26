@@ -33,6 +33,70 @@ gdt_entry_t gdt[GDT_COUNT] = {
             .g = 0x00,
             .base_31_24 = 0x00,
         },
+    [GDT_IDX_CODE_0] =
+        {
+            .limit_15_0  = 0b0011000011111111, // 16 bits: 0x30FF
+            .base_15_0   = 0b0000000000000000, // 16 bits: 0x0000
+            .base_23_16  = 0b00000000,         //  8 bits: 0x00
+            .type        = 0b1010,             //  4 bits: Código Execute/Read
+            .s           = 0b1,                //  1 bit : Descriptor de código/datos
+            .dpl         = 0b00,               //  2 bits: Nivel de privilegio 0
+            .p           = 0b1,                //  1 bit : Presente en RAM
+            .limit_19_16 = 0b0011,             //  4 bits: 0x3
+            .avl         = 0b0,                //  1 bit : Disponible (no usado)
+            .l           = 0b0,                //  1 bit : Modo 32 bits (no 64)
+            .db          = 0b1,                //  1 bit : Tamaño por defecto de 32 bits
+            .g           = 0b1,                //  1 bit : Granularidad de 4 KiB
+            .base_31_24  = 0b00000000,
+        },
+    [GDT_IDX_CODE_3] =
+        {
+            .limit_15_0  = 0b0011000011111111, // 16 bits: 0x30FF
+            .base_15_0   = 0b0000000000000000, // 16 bits: 0x0000
+            .base_23_16  = 0b00000000,         //  8 bits: 0x00
+            .type        = 0b1010,             //  4 bits: Código Execute/Read
+            .s           = 0b1,                //  1 bit : Descriptor de código/datos
+            .dpl         = 0b11,               //  2 bits: Nivel de privilegio 3
+            .p           = 0b1,                //  1 bit : Presente en RAM
+            .limit_19_16 = 0b0011,             //  4 bits: 0x3
+            .avl         = 0b0,                //  1 bit : Disponible (no usado)
+            .l           = 0b0,                //  1 bit : Modo 32 bits (no 64)
+            .db          = 0b1,                //  1 bit : Tamaño por defecto de 32 bits
+            .g           = 0b1,                //  1 bit : Granularidad de 4 KiB
+            .base_31_24  = 0b00000000,
+        },
+    [GDT_IDX_DATA_0] =
+        {
+            .limit_15_0  = 0b0011000011111111, // 16 bits: 0x30FF
+            .base_15_0   = 0b0000000000000000, // 16 bits: 0x0000
+            .base_23_16  = 0b00000000,         //  8 bits: 0x00
+            .type        = 0b0010,             //  4 bits: Código read/write
+            .s           = 0b1,                //  1 bit : Descriptor de código/datos
+            .dpl         = 0b00,               //  2 bits: Nivel de privilegio 0
+            .p           = 0b1,                //  1 bit : Presente en RAM
+            .limit_19_16 = 0b0011,             //  4 bits: 0x3
+            .avl         = 0b0,                //  1 bit : Disponible (no usado)
+            .l           = 0b0,                //  1 bit : Modo 32 bits (no 64)
+            .db          = 0b1,                //  1 bit : Tamaño por defecto de 32 bits
+            .g           = 0b1,                //  1 bit : Granularidad de 4 KiB
+            .base_31_24  = 0b00000000,
+        },
+    [GDT_IDX_DATA_3] =
+        {
+            .limit_15_0  = 0b0011000011111111, // 16 bits: 0x30FF
+            .base_15_0   = 0b0000000000000000, // 16 bits: 0x0000
+            .base_23_16  = 0b00000000,         //  8 bits: 0x00
+            .type        = 0b0010,             //  4 bits: CCódigo read/write
+            .s           = 0b1,                //  1 bit : Descriptor de código/datos
+            .dpl         = 0b11,               //  2 bits: Nivel de privilegio 3
+            .p           = 0b1,                //  1 bit : Presente en RAM
+            .limit_19_16 = 0b0011,             //  4 bits: 0x3
+            .avl         = 0b0,                //  1 bit : Disponible (no usado)
+            .l           = 0b0,                //  1 bit : Modo 32 bits (no 64)
+            .db          = 0b1,                //  1 bit : Tamaño por defecto de 32 bits
+            .g           = 0b1,                //  1 bit : Granularidad de 4 KiB
+            .base_31_24  = 0b00000000,
+        },
 
     /* Completar la GDT: 
       Es conveniente completar antes las constantes definidas en defines.h y valerse
