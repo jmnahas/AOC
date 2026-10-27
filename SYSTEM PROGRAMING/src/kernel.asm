@@ -93,7 +93,7 @@ modo_protegido:
     ; COMPLETAR - Imprimir mensaje de bienvenida - MODO PROTEGIDO (Parte 1: Pasaje a modo protegido)
     print_text_pm start_pm_msg,start_pm_len,0x0A,0,0
     ; COMPLETAR - Inicializar pantalla (Parte 1: Pasaje a modo protegido)
-    
+    call screen_draw_layout
     ; ===================================
     ; ||     (Parte 3: Paginación)     ||
     ; ===================================
