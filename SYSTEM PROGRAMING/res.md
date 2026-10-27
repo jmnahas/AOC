@@ -167,6 +167,9 @@ La estructura es la que hicimos en gdt.c si no tengo mal entendido, en la misma 
 
 11. Completen el archivo `kernel.asm` en la sección de cargar la GDT usando lo averiguado en el punto 8 para cargar la GDT.
 
+```
+   lgdt [GDT_DESC]
+```
 
 12. Lean la guía de Qemu+gdb. Inserten un breakpoint luego de cargar la GDT. Podemos ahora comprobar el arranque de la máquina hasta ese punto. Para compilar y correr el kernel, pueden usar el target de make `qemu`. Para debuguear con GDB, pueden usar el target `gdb`.
 
@@ -174,15 +177,15 @@ La estructura es la que hicimos en gdt.c si no tengo mal entendido, en la misma 
 
 Para pasar a modo protegido tenemos que completar los siguientes pasos:
 
-- Deshabilitar interrupciones || HECHO
+- Deshabilitar interrupciones 
 
-- Completar la GDT en memoria || HECHO
+- Completar la GDT en memoria 
 
-- Cargar la dirección de la GDT en el registro del procesador GDTR || HECHO
+- Cargar la dirección de la GDT en el registro del procesador GDTR 
 
-- Habilitar el modo protegido en el procesador
+- Habilitar el modo protegido en el procesador 
 
-- Hacer un jmp far al segmento de código de nivel 0
+- Hacer un jmp far al segmento de código de nivel 0 
 
 - Cargar los selectores de segmento restantes
 
@@ -219,8 +222,15 @@ mov ax, DS_RING_0_SEL
 
 
 17. Setear la pila del kernel en la dirección `0x25000`. Configuren los registros que indican dónde está la base y el tope de la pila.
-
+```
+    mov ebp, 0x25000
+    mov esp, 0x25000
+```
 18. Impriman el mensaje de bienvenida a modo protegido e inserten breakpoint en la instrucción siguiente
+```
+print_text_pm start_pm_msg,start_pm_len,0x0A,0,0
+```
+
 
 ## VAMOS A INICIAR EL KERNEL
 
@@ -267,9 +277,106 @@ Se va a acceder a la pantalla por un mapeo a memoria. La dirección física dond
 La pantalla va a ser un arreglo de 50 filas x 80 columnas. En cada posición del arreglo va a haber 2 bytes que representan a una celda de la pantalla. Los colores y atributos se configuran acorde a una convención: [http://wiki.osdev.org/Text_UI](http://wiki.osdev.org/Text_UI)
 
 21. Declaren un segmento adicional que describa el área de la pantalla en memoria que pueda ser utilizado sólo por el kernel. ¿Qué tamaño deberá tener considerando lo descrito en el párrafo anterior? Si el buffer de la pantalla comienza en `0x000B8000`[^3], piensen cuál debería ser la base y el límite. El tipo de este segmento debe ser de datos de lectura/escritura. Finalmente, definan el segmento en el archivo `gdt.c`.
+El tamaño seria 50 * 80 * 2 ya que el buffer de video debe tener esas caracteristicas para que entre el tamaño de renderizado,la base seria la direccion que nos pasan osea 0x000B8000 y el limite seria el tamaño osea 50 * 80 * 2.
+
+```
+[GDT_IDX_VIDEO] =
+    {
+        .limit_15_0  = 0b0001111101000000, // 16 bits: 0x30FF
+        .base_15_0   = 0b1000000000000000, // 16 bits: 0x0000
+        .base_23_16  = 0b00001011,         //  8 bits: 0x00
+        .type        = 0b0010,             //  4 bits: CCódigo read/write
+        .s           = 0b1,                //  1 bit : Descriptor de código/datos
+        .dpl         = 0b00,               //  2 bits: Nivel de privilegio 3
+        .p           = 0b1,                //  1 bit : Presente en RAM
+        .limit_19_16 = 0b0000,             //  4 bits: 0x3
+        .avl         = 0b0,                //  1 bit : Disponible (no usado)
+        .l           = 0b0,                //  1 bit : Modo 32 bits (no 64)
+        .db          = 0b1,                //  1 bit : Tamaño por defecto de 32 bits
+        .g           = 0b0,                //  1 bit : Granularidad de 4 KiB
+        .base_31_24  = 0b00000000,
+    }
+```
+
 
 22. Observen el método `screen_draw_box` en `screen.c` y la estructura `ca` en `screen.h` . ¿Qué creen que hace el método **screen_draw_box**? ¿Cómo hace para acceder a la pantalla? ¿Qué estructura usa para representar cada carácter de la pantalla y cuanto ocupa en memoria?
+screen_draw_box hace un rectangulo en pantalla, accede a pantalla usando las columnas y filas, usa un struct por cada pixel que contiene el caracter y las caracteristicas del mismo.
+
 
 23. Escriban una rutina `screen_draw_layout` que se encargue de limpiar la pantalla y escribir el nombre de los integrantes del grupo (o lo que deseen) en la misma en el archivo `screen.c` y llamen a dicho método desde `kernel.asm`. Pueden usar diferentes fondos, colores e incorporar dibujos si así lo quisieran.
 
+En screen.c :
+```
+void screen_draw_layout(void) {
+
+  screen_draw_box(0, 0, VIDEO_FILS, VIDEO_COLS, ' ', C_BG_LIGHT_GREY | C_FG_BLACK);
+
+  print("Juan Manuel Nahas", (VIDEO_COLS - 17) / 2, 20, C_BG_LIGHT_GREY | C_FG_LIGHT_GREEN);
+  
+}
+```
+
+En kernel.asm :
+
+```
+extern screen_draw_layout
+...
+call screen_draw_layout
+```
+
+
 24. Resumen final, discutan con compañeros qué pasos tuvieron que hacer para activar el procesador en modo protegido. Repasen todo el código que estuvieron completando y traten de comprenderlo en detalle ¿Qué cosas les parecieron más interesantes? Seguro encontrarán partes que no comprenden del todo, no duden en consultar a los docentes.
+
+Pasos para pasar a modo protegido:
+Primero arrancamos en modo real y para eso hacemos:
+
+1. Desahbilitar interrupciones:
+```
+ cli
+```
+2. Imprimimos el mensaje que estamos en modo real:
+```
+print_text_rm start_rm_msg,start_rm_len,0x0A,0,0
+```
+
+Ahora pasamos a modo protegido:
+1.Habilitamos el A20
+```
+call A20_enable
+```
+2.Cargamos la GDT:
+```
+lgdt [GDT_DESC]
+```
+3.Seteamos el CR0 en 1:
+```
+    mov eax, cr0
+    or eax, 1     
+    mov cr0, eax
+```
+4.Saltamos a modo protegido:
+```
+jmp CS_RING_0_SEL:modo_protegido
+```
+
+Por ultimo una vez estamos en modo protegido:
+1.Establecemos selectores de segmento:
+```
+    mov ax, DS_RING_0_SEL
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+```
+2.Establecemos tope y base de la pila:
+```
+    mov ebp, 0x25000
+    mov esp, 0x25000
+```
+3.Damos la bienvenida:
+```
+print_text_pm start_pm_msg,start_pm_len,0x0A,0,0
+```
+
+Y listo con eso estariamos.
