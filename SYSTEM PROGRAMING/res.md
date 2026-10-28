@@ -428,6 +428,14 @@ El descriptor de la IDT en el código se llama `IDT_DESC`.
 En el archivo idt.c pueden encontrar la definición de cada una de las entradas y la definición de la función `idt_init` que inicializa la IDT definiendo cada una de sus entradas usando la macro `IDT_ENTRYx`.
 
 a) Observen que la macro `IDT_ENTRY0` corresponde a cada entrada de la IDT de nivel 0 ¿A qué se refiere cada campo? ¿Qué valores toma el campo offset?
+```
+    .offset_31_16 = HIGH_16_BITS(&_isr##numero), Corresponde a la primera parte del offset
+    .offset_15_0 = LOW_16_BITS(&_isr##numero),   Corresponde a la segunda parte del offset
+    .segsel = GDT_CODE_0_SEL,                    Selector de segmento, si es de codigo, de data
+    .type = 01110,                               Tipo de interrupcion si termina en 1 es trap sino es interrupt, en el medio tenes el D que ayuda a saber si es de 32 o 16 bits
+    .dpl = 00,                                   El privilegio de nivel tambien existia en GDT es de 0 a 3
+    .present = 1                                 Presente o no gordito
+```
 
 Pueden ayudarse de la siguiente figura.
 Observen que los atributos son los bits 15 a 5 de la palabra de 32 bits superior.
@@ -437,20 +445,49 @@ Observen que los atributos son los bits 15 a 5 de la palabra de 32 bits superior
 > Figura 1: Entrada de la IDT - Interrupt Gate
 
 b) Completar los campos de Selector de Segmento (`segsel`) y los atributos (`attr`) de manera que al usarse la macro defina una *Interrupt Gate* de nivel 0.
+```
+.segsel = GDT_CODE_0_SEL, porque es de nivel 0
+.dpl = 0b00, porque es privilegio 0
+.type = 0b01110, porque es ionterrupt gate de 32
+```
 
 c) De manera similar, completar la macro `IDT_ENTRY3` para que defina interrupciones que puedan ser disparadas por código no privilegiado (nivel 3).
+```
+.segsel = GDT_CODE_0_SEL, porque se sigue escribiendo en el mismo lugar
+.dpl = 0b11, porque es privilegio 3
+.type = 01110, porque es ionterrupt gate de 32
+```
 
 > **Nota:** Para el Selector de Segmento, recuerden que el código de las rutinas de atención de interrupción **corre a nivel de kernel**. ¿Cuál sería un selector de segmento apropiado acorde a los índices definidos en la `GDT[segsel]`? ¿Y el valor de los atributos si usamos _Gate Size_ de 32 bits?
 
 2. Completar la función idt_init() con las entradas correspondientes a las interrupciones de reloj y teclado ¿Qué macro utilizarían?
+```
+  Interrupciones de reloj y teclado
+  IDT_ENTRY0(32);
+  IDT_ENTRY0(33);
+
+```
 
 3. Nos queda definir dos system calls. Estas son interrupciones de software que se van a poder usar con nivel de privilegio de usuario, en nuestro caso, nivel 3.
 Usar la macro correspondiente para definir system calls con número 88 y 98.
+```
+  Syscalls
+  IDT_ENTRY3(88);
+  IDT_ENTRY3(98);
+```
 
 4. Completen `kernel.asm` inicializando la IDT y usen `lidt` para cargar la IDT en memoria
 
 Compilen y ejecuten con qemu.
 Pueden examinar la IDT con el comando `info idt` provisto por la cátedra para ver toda la tabla o usar GDB tradicionalmente para ver una entrada: `p idt[x]` dónde `x` es el índice de la entrada en la IDT.
+
+```
+inicializando la IDT
+    call idt_init
+
+cargar la IDT en memoria
+    lidt [IDT_DESC]
+```
 
 
 ### Segunda parte: Rutinas de Atención de Interrupción

@@ -10,6 +10,10 @@ global start
 
 ; COMPLETAR - Agreguen declaraciones extern según vayan necesitando
 extern GDT_DESC
+extern IDT_DESC
+extern pic_enable
+extern pic_reset
+extern idt_init
 extern screen_draw_layout
 ; COMPLETAR - Definan correctamente estas constantes cuando las necesiten
 %define CS_RING_0_SEL (1 << 3)  
@@ -126,11 +130,12 @@ modo_protegido:
     ; ===================================
 
     ; COMPLETAR - las funciones en idt.c
-
+    call idt_init
     ; COMPLETAR - Inicializar y cargar la IDT
-
+    lidt [IDT_DESC]
     ; COMPLETAR - Reiniciar y habilitar el controlador de interrupciones (ver pic.c)
-
+    call pic_reset   ; remapear PIC
+    call pic_enable
     ; COMPLETAR - Rutinas de atención de reloj, teclado, e interrupciones 88 y 89 (en isr.asm)
 
     ; COMPLETAR (Parte 4: Tareas)- Cargar tarea inicial

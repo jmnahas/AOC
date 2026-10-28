@@ -180,7 +180,7 @@ _isr33:
     ; 1. Le decimos al PIC que vamos a atender la interrupción
     
     ; 2. Leemos la tecla desde el teclado y la procesamos con la funcion process_scancode (Durante Parte 2: Interrupciones) o tasks_input_process (Durante Parte 4: Tareas)
-    
+    call process_scancode
     popad
     iret
 
@@ -193,7 +193,7 @@ global _isr88
 ; Para la seccion de interrupciones: que modifique el valor de eax por 0x58
 ; Para las secciones de paginación y tareas: que llame a la funcion task_syscall_draw
 _isr88:
-
+  mov eax,0x58
   iret
 
 
@@ -201,7 +201,7 @@ _isr88:
 ; La rutina debe modificar el valor de eax por 0x62
 global _isr98
 _isr98:
-  
+  mov eax,0x62
   iret
 
 ; PushAD Order
