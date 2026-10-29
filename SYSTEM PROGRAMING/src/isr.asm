@@ -16,6 +16,7 @@ sched_task_selector:   dw 0xFFFF
 
 ;; PIC
 extern pic_finish1
+extern process_scancode
 
 ;; Sched
 extern sched_next_task
@@ -156,10 +157,10 @@ _isr32:
     pushad
     ; 1. Le decimos al PIC que vamos a atender la interrupción
     ; COMPLETAR
-    
+    call pic_finish1
     ; 2. Imprimimos el reloj que gira en pantalla
     ; COMPLETAR
-    
+    call next_clock
     ; 3. (Parte 4: Tareas) Realizamos el cambio de tareas en caso de ser necesario
     ; COMPLETAR
 
@@ -178,9 +179,12 @@ global _isr33
 _isr33:
     pushad
     ; 1. Le decimos al PIC que vamos a atender la interrupción
-    
+    call pic_finish1
     ; 2. Leemos la tecla desde el teclado y la procesamos con la funcion process_scancode (Durante Parte 2: Interrupciones) o tasks_input_process (Durante Parte 4: Tareas)
+    in al, 0x60
+    push eax
     call process_scancode
+    add esp, 4
     popad
     iret
 

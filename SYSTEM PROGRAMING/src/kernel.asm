@@ -141,14 +141,14 @@ modo_protegido:
     ; COMPLETAR (Parte 4: Tareas)- Cargar tarea inicial
 
     ; COMPLETAR - Habilitar interrupciones (!! en etapas posteriores, evaluar si se debe comentar este código !!)
-    
+    sti
     ; NOTA: Pueden chequear que las interrupciones funcionen forzando a que se
     ;       dispare alguna excepción (lo más sencillo es usar la instrucción
     ;       `int3`)
     ;int3
 
     ; COMPLETAR - Probar Sys_call (para etapas posteriores, comentar este código)
-
+    int 88
     ; COMPLETAR - Probar generar una excepción (para etapas posteriores, comentar este código)
     
     ; ========================

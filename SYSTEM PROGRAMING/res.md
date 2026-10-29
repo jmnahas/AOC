@@ -499,7 +499,10 @@ taller.
 Recordar remapear las interrupciones del **PIC1** a partir de la 32 (0x20) y del **PIC2** a partir de la 40 (0x28).
 
 2. Agregar en `kernel.asm` la inicialización correspondiente para los PICs.
-
+```
+    call pic_reset   ; remapear PIC
+    call pic_enable
+```
 3. Las rutinas de atención de interrupción son definidas en el archivo `isr.asm`.
 Cada una está definida usando la etiqueta `_isr##` donde `##` es el número de la interrupción.
 Busquen en el archivo la rutina de atención de interrupción del reloj.
@@ -508,15 +511,49 @@ Completar la rutina asociada al reloj, para que por cada interrupción llame a l
 La función `next_clock` está definida en `isr.asm`.
 
   ¿Qué oficiaría de prólogo y epílogo de estas rutinas? ¿Qué marca el `iret` y por qué no usamos `ret`?
+El prologo seria pushad y el epilogo seria el popad y el iret
+```
+    pushad
+    ; 1. Le decimos al PIC que vamos a atender la interrupción
+    call pic_finish1
+    ; 2. Imprimimos el reloj que gira en pantalla
+    call next_clock
+    .fin:
+    popad
+```
 
 4. Completen la rutina de interrupción de teclado. La misma debe leer el scan code del puerto `0x60` y luego procesarlo con la función `process_scancode` provista en `keyboard_input.c`.
+```
+    call pic_finish1
+    ; 2. Leemos la tecla desde el teclado y la procesamos con la funcion process_scancode (Durante Parte 2: Interrupciones) o tasks_input_process (Durante Parte 4: Tareas)
+    in al, 0x60
+    push eax
+    call process_scancode
+    add esp, 4
+```
+
 
 5. Escribir las rutinas asociadas a las interrupciones 88 y 98, para que modifique el valor de eax por 0x58 y 0x62 respectivamente.
 Posteriormente, este comportamiento va a ser modificado para atender cada uno de los servicios del sistema.
+```
+_isr88:
+  mov eax,0x58
+
+_isr98:
+  mov eax,0x62
+```
+
 
 6. Habiliten las interrupciones con `sti` en `kernel.asm`.
 Luego, escriban un par de líneas que utilicen la instrucción `int` para probar alguna de las interrupciones de software que cargaron.
 Pueden poner un breakpoint después de la interrupción para inspeccionar los registros y verificar que se produjo el cambio de valor en `eax`.
+
+```
+sti
+
+
+    int 88
+```
 
 7. Compilen y ejecuten con qemu. Verifiquen la ejecución de la rutina de atención del reloj y de las interrupciones 88, 98.
 Discutan con compañeros por qué va rotando el reloj.
